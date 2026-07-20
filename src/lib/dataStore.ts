@@ -26,15 +26,11 @@ interface SupabaseDocument {
 
 export async function readDocuments(): Promise<DocumentData[]> {
   const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from('documents')
-    .select('*')
-    .order('created_at', { ascending: false });
   
-  if (error) {
-    console.error('Error reading documents:', error);
-    // Fallback to initial data if table doesn't exist yet
-    const initialData: DocumentData[] = [
+  // Fallback to initial data if Supabase client isn't available
+  if (!supabase) {
+    console.error('Supabase client not available, using fallback data');
+    return [
       {
         id: '1',
         title: 'Hackathon Pitch Deck',
@@ -69,7 +65,51 @@ export async function readDocuments(): Promise<DocumentData[]> {
         createdAt: new Date().toISOString(),
       },
     ];
-    return initialData;
+  }
+  
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error reading documents:', error);
+    // Fallback to initial data if there's an error
+    return [
+      {
+        id: '1',
+        title: 'Hackathon Pitch Deck',
+        description: 'Professional pitch deck template for hackathon presentations',
+        category: 'Templates',
+        type: 'PPTX',
+        size: '5.2 MB',
+        filePath: '',
+        status: 'approved',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: '2',
+        title: 'Project Proposal Guide',
+        description: 'Step-by-step guide to writing a winning project proposal',
+        category: 'Guides',
+        type: 'PDF',
+        size: '1.8 MB',
+        filePath: '',
+        status: 'approved',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: '3',
+        title: 'React Best Practices',
+        description: 'Comprehensive guide to React development best practices',
+        category: 'Resources',
+        type: 'PDF',
+        size: '2.1 MB',
+        filePath: '',
+        status: 'approved',
+        createdAt: new Date().toISOString(),
+      },
+    ];
   }
   
   // Map Supabase snake_case to camelCase
@@ -94,6 +134,10 @@ export async function writeDocuments() {
 // New Supabase-specific functions
 export async function createDocumentSupabase(doc: Omit<DocumentData, 'createdAt'>): Promise<DocumentData> {
   const supabase = createServerClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available for createDocument');
+  }
+  
   const newDoc = {
     id: doc.id,
     title: doc.title,
@@ -120,17 +164,21 @@ export async function createDocumentSupabase(doc: Omit<DocumentData, 'createdAt'
     id: data.id,
     title: data.title,
     description: data.description,
-    category: data.category,
+    category: data.category as 'Templates' | 'Guides' | 'Resources',
     type: data.type,
     size: data.size,
-    filePath: data.file_path,
-    status: data.status,
+    filePath: data.file_path || '',
+    status: data.status as 'pending' | 'approved' | 'rejected',
     createdAt: data.created_at,
   };
 }
 
 export async function updateDocumentStatusSupabase(id: string, status: DocumentData['status']): Promise<DocumentData> {
   const supabase = createServerClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available for updateDocumentStatus');
+  }
+  
   const { data, error } = await supabase
     .from('documents')
     .update({ status })
@@ -146,17 +194,21 @@ export async function updateDocumentStatusSupabase(id: string, status: DocumentD
     id: data.id,
     title: data.title,
     description: data.description,
-    category: data.category,
+    category: data.category as 'Templates' | 'Guides' | 'Resources',
     type: data.type,
     size: data.size,
-    filePath: data.file_path,
-    status: data.status,
+    filePath: data.file_path || '',
+    status: data.status as 'pending' | 'approved' | 'rejected',
     createdAt: data.created_at,
   };
 }
 
 export async function deleteDocumentSupabase(id: string): Promise<boolean> {
   const supabase = createServerClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available for deleteDocument');
+  }
+  
   const { error } = await supabase
     .from('documents')
     .delete()
