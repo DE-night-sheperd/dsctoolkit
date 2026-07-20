@@ -11,7 +11,6 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { createServerClient } from "@/lib/supabase";
 
 export async function verifyPassword(password: string) {
   const validPassword = process.env.TOOLKIT_PASSWORD || "password123";

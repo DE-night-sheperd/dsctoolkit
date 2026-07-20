@@ -12,6 +12,18 @@ export interface DocumentData {
   createdAt: string;
 }
 
+interface SupabaseDocument {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  type: string;
+  size: string;
+  file_path: string | null;
+  status: string;
+  created_at: string;
+}
+
 export async function readDocuments(): Promise<DocumentData[]> {
   const supabase = createServerClient();
   const { data, error } = await supabase
@@ -61,20 +73,20 @@ export async function readDocuments(): Promise<DocumentData[]> {
   }
   
   // Map Supabase snake_case to camelCase
-  return data.map((doc: any) => ({
+  return data.map((doc: SupabaseDocument) => ({
     id: doc.id,
     title: doc.title,
     description: doc.description,
-    category: doc.category,
+    category: doc.category as 'Templates' | 'Guides' | 'Resources',
     type: doc.type,
     size: doc.size,
-    filePath: doc.file_path,
-    status: doc.status,
+    filePath: doc.file_path || '',
+    status: doc.status as 'pending' | 'approved' | 'rejected',
     createdAt: doc.created_at,
   }));
 }
 
-export async function writeDocuments(documents: DocumentData[]) {
+export async function writeDocuments() {
   // For Supabase, we don't need to write all documents at once - we'll use individual operations
   console.warn('writeDocuments is deprecated for Supabase, use individual CRUD operations');
 }
