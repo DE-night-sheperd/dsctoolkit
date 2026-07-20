@@ -65,20 +65,24 @@
   }
   body {
     @apply text-foreground min-h-screen;
-    /* DSC Themed Background: the real DSC logo, watermarked behind a soft brand gradient */
+    /* DSC Themed Background with both your images */
     background:
       linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.12) 50%, rgba(139, 92, 246, 0.08) 100%),
-      url("/dsc-logo-bg.png") center 12% / 480px auto no-repeat,
+      url("/dsc-logo-bg.png") center center / 480px auto no-repeat,
+      url("/whatsapp-bg.jpeg") center center / cover no-repeat,
       hsl(var(--background));
-    background-attachment: fixed, fixed, fixed;
+    background-attachment: fixed, fixed, fixed, fixed;
+    background-blend-mode: overlay, normal, normal, normal;
   }
 
   .dark body {
     background:
       linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(16, 185, 129, 0.14) 50%, rgba(139, 92, 246, 0.14) 100%),
-      url("/dsc-logo-bg.png") center 12% / 480px auto no-repeat,
+      url("/dsc-logo-bg.png") center center / 480px auto no-repeat,
+      url("/whatsapp-bg.jpeg") center center / cover no-repeat,
       hsl(var(--background));
-    background-attachment: fixed, fixed, fixed;
+    background-attachment: fixed, fixed, fixed, fixed;
+    background-blend-mode: overlay, normal, normal, normal;
   }
 }
 

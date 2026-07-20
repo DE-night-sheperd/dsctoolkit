@@ -1,10 +1,17 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { readDocuments, writeDocuments, type DocumentData } from "@/lib/dataStore";
+import { 
+  readDocuments, 
+  type DocumentData, 
+  createDocumentSupabase, 
+  updateDocumentStatusSupabase, 
+  deleteDocumentSupabase 
+} from "@/lib/dataStore";
 import { v4 as uuidv4 } from "uuid";
 import * as fs from "fs";
 import * as path from "path";
+import { createServerClient } from "@/lib/supabase";
 
 export async function verifyPassword(password: string) {
   const validPassword = process.env.TOOLKIT_PASSWORD || "password123";
@@ -58,7 +65,6 @@ export async function getApprovedDocuments() {
 }
 
 export async function createDocument(data: Omit<DocumentData, "id" | "createdAt" | "filePath">, file: File) {
-  const docs = await readDocuments();
   const id = uuidv4();
   const uploadDir = path.join(process.cwd(), "public", "uploads");
   if (!fs.existsSync(uploadDir)) {
@@ -69,32 +75,19 @@ export async function createDocument(data: Omit<DocumentData, "id" | "createdAt"
   const fileBuffer = Buffer.from(await file.arrayBuffer());
   fs.writeFileSync(filePath, fileBuffer);
   
-  const newDoc: DocumentData = {
+  const newDoc: Omit<DocumentData, "createdAt"> = {
     ...data,
     id,
-    createdAt: new Date().toISOString(),
     filePath: `/uploads/${fileName}`,
   };
   
-  docs.push(newDoc);
-  await writeDocuments(docs);
-  return newDoc;
+  return await createDocumentSupabase(newDoc);
 }
 
 export async function updateDocumentStatus(id: string, status: DocumentData["status"]) {
-  const docs = await readDocuments();
-  const index = docs.findIndex(doc => doc.id === id);
-  if (index === -1) {
-    throw new Error("Document not found");
-  }
-  docs[index].status = status;
-  await writeDocuments(docs);
-  return docs[index];
+  return await updateDocumentStatusSupabase(id, status);
 }
 
 export async function deleteDocument(id: string) {
-  const docs = await readDocuments();
-  const filteredDocs = docs.filter(doc => doc.id !== id);
-  await writeDocuments(filteredDocs);
-  return true;
+  return await deleteDocumentSupabase(id);
 }

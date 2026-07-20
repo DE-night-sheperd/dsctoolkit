@@ -68,7 +68,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">

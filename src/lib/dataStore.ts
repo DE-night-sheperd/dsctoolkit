@@ -1,7 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
-const DATA_FILE = path.join(process.cwd(), 'data', 'documents.json');
+import { createServerClient } from './supabase';
 
 export interface DocumentData {
   id: string;
@@ -16,11 +13,15 @@ export interface DocumentData {
 }
 
 export async function readDocuments(): Promise<DocumentData[]> {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(DATA_FILE)) {
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error reading documents:', error);
+    // Fallback to initial data if table doesn't exist yet
     const initialData: DocumentData[] = [
       {
         id: '1',
@@ -56,17 +57,102 @@ export async function readDocuments(): Promise<DocumentData[]> {
         createdAt: new Date().toISOString(),
       },
     ];
-    fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
     return initialData;
   }
-  const content = fs.readFileSync(DATA_FILE, 'utf-8');
-  return JSON.parse(content);
+  
+  // Map Supabase snake_case to camelCase
+  return data.map((doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    description: doc.description,
+    category: doc.category,
+    type: doc.type,
+    size: doc.size,
+    filePath: doc.file_path,
+    status: doc.status,
+    createdAt: doc.created_at,
+  }));
 }
 
 export async function writeDocuments(documents: DocumentData[]) {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  // For Supabase, we don't need to write all documents at once - we'll use individual operations
+  console.warn('writeDocuments is deprecated for Supabase, use individual CRUD operations');
+}
+
+// New Supabase-specific functions
+export async function createDocumentSupabase(doc: Omit<DocumentData, 'createdAt'>): Promise<DocumentData> {
+  const supabase = createServerClient();
+  const newDoc = {
+    id: doc.id,
+    title: doc.title,
+    description: doc.description,
+    category: doc.category,
+    type: doc.type,
+    size: doc.size,
+    file_path: doc.filePath,
+    status: doc.status,
+    created_at: new Date().toISOString(),
+  };
+  
+  const { data, error } = await supabase
+    .from('documents')
+    .insert([newDoc])
+    .select()
+    .single();
+  
+  if (error) {
+    throw new Error(`Error creating document: ${error.message}`);
   }
-  fs.writeFileSync(DATA_FILE, JSON.stringify(documents, null, 2));
+  
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    type: data.type,
+    size: data.size,
+    filePath: data.file_path,
+    status: data.status,
+    createdAt: data.created_at,
+  };
+}
+
+export async function updateDocumentStatusSupabase(id: string, status: DocumentData['status']): Promise<DocumentData> {
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from('documents')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) {
+    throw new Error(`Error updating document: ${error.message}`);
+  }
+  
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    type: data.type,
+    size: data.size,
+    filePath: data.file_path,
+    status: data.status,
+    createdAt: data.created_at,
+  };
+}
+
+export async function deleteDocumentSupabase(id: string): Promise<boolean> {
+  const supabase = createServerClient();
+  const { error } = await supabase
+    .from('documents')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    throw new Error(`Error deleting document: ${error.message}`);
+  }
+  
+  return true;
 }
