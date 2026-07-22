@@ -29,6 +29,7 @@ export default function AdminDashboardClient({ initialDocuments }: AdminDashboar
     category: "Templates" as "Templates" | "Guides" | "Resources",
     file: null as File | null,
   });
+  const [uploadError, setUploadError] = useState("");
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -38,28 +39,34 @@ export default function AdminDashboardClient({ initialDocuments }: AdminDashboar
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setUploadError("");
     if (!uploadForm.file) return;
     
-    const fileSizeMB = (uploadForm.file.size / (1024 * 1024)).toFixed(1);
-    const fileExtension = uploadForm.file.name.split('.').pop()?.toUpperCase() || 'FILE';
-    
-    const newDoc = await createDocument({
-      title: uploadForm.title,
-      description: uploadForm.description,
-      category: uploadForm.category,
-      type: fileExtension,
-      size: `${fileSizeMB} MB`,
-      status: "pending",
-    }, uploadForm.file);
-    
-    setDocuments([...documents, newDoc]);
-    setUploadForm({
-      title: "",
-      description: "",
-      category: "Templates",
-      file: null,
-    });
-    setIsUploadDialogOpen(false);
+    try {
+      const fileSizeMB = (uploadForm.file.size / (1024 * 1024)).toFixed(1);
+      const fileExtension = uploadForm.file.name.split('.').pop()?.toUpperCase() || 'FILE';
+      
+      const newDoc = await createDocument({
+        title: uploadForm.title,
+        description: uploadForm.description,
+        category: uploadForm.category,
+        type: fileExtension,
+        size: `${fileSizeMB} MB`,
+        status: "pending",
+      }, uploadForm.file);
+      
+      setDocuments([...documents, newDoc]);
+      setUploadForm({
+        title: "",
+        description: "",
+        category: "Templates",
+        file: null,
+      });
+      setIsUploadDialogOpen(false);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError(error instanceof Error ? error.message : "An unknown error occurred");
+    }
   };
 
   const handleStatusChange = useCallback(async (id: string, status: DocumentData["status"]) => {
@@ -158,6 +165,9 @@ export default function AdminDashboardClient({ initialDocuments }: AdminDashboar
                         required
                       />
                     </div>
+                    {uploadError && (
+                      <p className="text-destructive text-sm">{uploadError}</p>
+                    )}
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
                       <Button type="submit">

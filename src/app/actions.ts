@@ -8,9 +8,8 @@ import {
   updateDocumentStatusSupabase, 
   deleteDocumentSupabase 
 } from "@/lib/dataStore";
+import { createServerClient } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
-import * as fs from "fs";
-import * as path from "path";
 
 export async function verifyPassword(password: string) {
   const validPassword = process.env.TOOLKIT_PASSWORD || "password123";
@@ -65,19 +64,37 @@ export async function getApprovedDocuments() {
 
 export async function createDocument(data: Omit<DocumentData, "id" | "createdAt" | "filePath">, file: File) {
   const id = uuidv4();
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+  const supabase = createServerClient();
+  
+  if (!supabase) {
+    throw new Error("Supabase client not available for file upload");
   }
+  
+  // Upload file to Supabase Storage
   const fileName = `${id}-${file.name}`;
-  const filePath = path.join(uploadDir, fileName);
   const fileBuffer = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(filePath, fileBuffer);
+  
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("documents")
+    .upload(fileName, fileBuffer, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+  
+  if (uploadError) {
+    console.error("Error uploading file:", uploadError);
+    throw new Error(`Failed to upload file: ${uploadError.message}`);
+  }
+  
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from("documents")
+    .getPublicUrl(uploadData.path);
   
   const newDoc: Omit<DocumentData, "createdAt"> = {
     ...data,
     id,
-    filePath: `/uploads/${fileName}`,
+    filePath: publicUrl,
   };
   
   return await createDocumentSupabase(newDoc);
@@ -88,5 +105,13 @@ export async function updateDocumentStatus(id: string, status: DocumentData["sta
 }
 
 export async function deleteDocument(id: string) {
+  const supabase = createServerClient();
+  
+  if (supabase) {
+    // Try to get the document first to find the file path
+    // For now, we'll just delete from the database, and leave the file in storage
+    // You could add logic here to delete the file from storage too if you want
+  }
+  
   return await deleteDocumentSupabase(id);
 }
