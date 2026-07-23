@@ -175,7 +175,12 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
                     </DialogContent>
                   </Dialog>
                   <Button asChild className="flex-1">
-                    <a href={doc.filePath || "#"} target="_blank" rel="noopener noreferrer" download>
+                    <a 
+                      href={doc.filePath || "#"} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      download={doc.title + '.' + doc.type.toLowerCase()}
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </a>
