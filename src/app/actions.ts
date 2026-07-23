@@ -105,6 +105,29 @@ export async function createDocument(data: Omit<DocumentData, "id" | "createdAt"
   return await createDocumentSupabase(newDoc);
 }
 
+// New: Get a signed URL for downloading
+export async function getSignedDownloadUrl(filePath: string) {
+  const supabase = createServerClient();
+  if (!supabase) {
+    return null;
+  }
+  
+  // Extract the file name from the full URL
+  const fileName = filePath.split('/').pop();
+  if (!fileName) return null;
+  
+  const { data, error } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(fileName, 60); // 60 seconds expiry
+  
+  if (error) {
+    console.error("Error creating signed URL:", error);
+    return null;
+  }
+  
+  return data.signedUrl;
+}
+
 export async function updateDocumentStatus(id: string, status: DocumentData["status"]) {
   return await updateDocumentStatusSupabase(id, status);
 }
