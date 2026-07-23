@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, CheckCircle, XCircle, Trash2, LogOut, Plus, Search } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, Trash2, LogOut, Plus, Search, Download } from "lucide-react";
 import { type DocumentData } from "@/lib/dataStore";
 import { adminLogout, createDocument, updateDocumentStatus, deleteDocument } from "@/app/actions";
 
