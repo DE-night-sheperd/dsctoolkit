@@ -70,7 +70,10 @@ export async function createDocument(data: Omit<DocumentData, "id" | "createdAt"
     throw new Error("Supabase client not available for file upload");
   }
   
-  // Upload file to Supabase Storage
+  // Get file extension correctly
+  const fileExtension = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+  
+  // Upload file to Supabase Storage with correct Content-Type
   const fileName = `${id}-${file.name}`;
   const fileBuffer = Buffer.from(await file.arrayBuffer());
   
@@ -79,6 +82,7 @@ export async function createDocument(data: Omit<DocumentData, "id" | "createdAt"
     .upload(fileName, fileBuffer, {
       cacheControl: "3600",
       upsert: false,
+      contentType: file.type,
     });
   
   if (uploadError) {
@@ -94,6 +98,7 @@ export async function createDocument(data: Omit<DocumentData, "id" | "createdAt"
   const newDoc: Omit<DocumentData, "createdAt"> = {
     ...data,
     id,
+    type: fileExtension,
     filePath: publicUrl,
   };
   
