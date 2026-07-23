@@ -237,6 +237,62 @@ export default function AdminDashboardClient({ initialDocuments }: AdminDashboar
                             <span>{doc.type} • {doc.size}</span>
                             <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
                           </div>
+                          <div className="flex gap-2 mb-4">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="flex-1">
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Preview
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-5xl max-h-[90vh]">
+                                <DialogHeader>
+                                  <DialogTitle>{doc.title}</DialogTitle>
+                                  <DialogDescription>{doc.description}</DialogDescription>
+                                </DialogHeader>
+                                <div className="bg-muted rounded-lg p-4 flex flex-col items-center justify-center min-h-[400px] max-h-[70vh] overflow-hidden">
+                                  {doc.type.toLowerCase() === 'pdf' ? (
+                                    doc.filePath ? (
+                                      <iframe
+                                        src={doc.filePath}
+                                        className="w-full h-full min-h-[500px] rounded-lg border border-border"
+                                        title={doc.title}
+                                      />
+                                    ) : (
+                                      <FileText className="h-16 w-16 text-muted-foreground" />
+                                    )
+                                  ) : ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(doc.type.toLowerCase()) ? (
+                                    doc.filePath ? (
+                                      <img
+                                        src={doc.filePath}
+                                        alt={doc.title}
+                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                      />
+                                    ) : (
+                                      <FileText className="h-16 w-16 text-muted-foreground" />
+                                    )
+                                  ) : (
+                                    <div className="text-center">
+                                      <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                                      <p className="text-muted-foreground">Preview not available for this file type.</p>
+                                      <p className="text-sm text-muted-foreground mt-2">Please download the file to view it.</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button asChild variant="outline" size="sm" className="flex-1">
+                              <a 
+                                href={doc.filePath || "#"} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                download={doc.title + '.' + doc.type.toLowerCase()}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </a>
+                            </Button>
+                          </div>
                           <div className="flex gap-2">
                             {doc.status === "pending" && (
                               <>
